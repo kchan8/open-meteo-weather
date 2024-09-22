@@ -1,18 +1,19 @@
 import { FormEvent, useState, useEffect } from 'react';
 import Select from 'react-select';
 import { MultiValue } from 'react-select';
+import { weatherCodeMap } from '@/utils/weatherCodeMap';
 
 interface OptionType {
   value: string;
   label: string;
 }
 
-type Row = {
-  time: string;
-  temperature: number;
-  humidity: number;
-  code: number;
-};
+// type Row = {
+//   time: string;
+//   temperature: number;
+//   humidity: number;
+//   code: number;
+// };
 
 const WeatherQuery = () => {
   const weatherVariables: OptionType[] = [
@@ -22,7 +23,7 @@ const WeatherQuery = () => {
   ];
 
   const [headerContent, setHeaderContent] = useState<string[]>();
-  const [resultContent, setResultContent] = useState<Row[]>();
+  const [resultContent, setResultContent] = useState<unknown[][]>([]);
   // State for input change
   // const [inputValue, setInputValue] = useState<string>('temperature_2m');
   const [isMounted, setIsMounted] = useState(false); // Track component mount status
@@ -85,7 +86,6 @@ const WeatherQuery = () => {
     const keys = Object.keys(input); // Get the keys from the object
     const arrays = Object.values(input); // Get the arrays from the object
 
-    // Check if all arrays have the same length
     const length = arrays[0].length;
 
     // Create an array of objects where each object maps a key to the corresponding value from each array
@@ -104,14 +104,28 @@ const WeatherQuery = () => {
     );
   };
 
-  const objectOfArraysToArray = <T,>(input: Record<string, T[]>): T[][] => {
+  const objectOfArraysToArray = <T,>(
+    input: Record<string, T[]>
+    // ): (string | T)[][] => {
+  ): T[][] => {
     const keys = Object.keys(input); // Get the keys from the object
     const arrays = Object.values(input); // Get the arrays from the object
 
-    // Check if all arrays have the same length
     const length = arrays[0].length;
     return Array.from({ length }, (_, rowIndex) =>
-      keys.map(key => input[key][rowIndex])
+      keys.map(key => {
+        switch (key) {
+          case 'weather_code':
+            return weatherCodeMap[input[key][rowIndex]];
+          default:
+            return input[key][rowIndex];
+        }
+        // key === 'weather_code'
+        //   ? weatherCodeMap[
+        //       input[key][rowIndex] as keyof typeof weatherCodeMap
+        //     ] || 'Unknown'
+        //   : input[key][rowIndex]
+      })
     );
   };
 
@@ -138,18 +152,10 @@ const WeatherQuery = () => {
       console.log(header);
       const records = data.hourly;
       console.log(records);
-      const tableBody = objectOfArraysToObjects(records);
-      // const tableBody = objectOfArraysToArray(records);
-      // const tableBody_old: Row[] = records.time.map((_: unknown, index: number) => {
-      //   return {
-      //     time: new Date(records.time[index]).toLocaleString(),
-      //     temperature: records.temperature_2m[index],
-      //     humidity: records.relative_humidity_2m[index],
-      //     code: records.weather_code[index],
-      //   };
-      // });
+      // const tableBody = objectOfArraysToObjects(records);
+      const tableBody = objectOfArraysToArray(records);
       console.log(tableBody);
-      // setResultContent(tableBody);
+      setResultContent(tableBody);
     } catch (error) {
       console.error(error);
     }
@@ -248,10 +254,11 @@ const WeatherQuery = () => {
               {resultContent ? (
                 resultContent.map((item, index) => (
                   <tr key={index}>
-                    <td className={rowStyle}>{item.time}</td>
-                    <td className={rowStyle}>{item.temperature}</td>
-                    <td className={rowStyle}>{item.humidity}</td>
-                    <td className={rowStyle}>{item.code}</td>
+                    {item.map((itx, idx) => (
+                      <td key={idx} className={rowStyle}>
+                        {itx as string | number}
+                      </td>
+                    ))}
                   </tr>
                 ))
               ) : (
