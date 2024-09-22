@@ -91,12 +91,27 @@ const WeatherQuery = () => {
     // Create an array of objects where each object maps a key to the corresponding value from each array
     return Array.from({ length }, (_, rowIndex) =>
       keys.reduce(
-        (acc, key, i) => {
-          acc[key] = arrays[i][rowIndex];
+        // (acc, key, i) => {
+        //   acc[key] = arrays[i][rowIndex];
+        //   return acc;
+        // },
+        (acc, key) => {
+          acc[key] = input[key][rowIndex];
           return acc;
         },
         {} as Record<string, T>
       )
+    );
+  };
+
+  const objectOfArraysToArray = <T,>(input: Record<string, T[]>): T[][] => {
+    const keys = Object.keys(input); // Get the keys from the object
+    const arrays = Object.values(input); // Get the arrays from the object
+
+    // Check if all arrays have the same length
+    const length = arrays[0].length;
+    return Array.from({ length }, (_, rowIndex) =>
+      keys.map(key => input[key][rowIndex])
     );
   };
 
@@ -124,6 +139,7 @@ const WeatherQuery = () => {
       const records = data.hourly;
       console.log(records);
       const tableBody = objectOfArraysToObjects(records);
+      // const tableBody = objectOfArraysToArray(records);
       // const tableBody_old: Row[] = records.time.map((_: unknown, index: number) => {
       //   return {
       //     time: new Date(records.time[index]).toLocaleString(),
