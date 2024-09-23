@@ -1,31 +1,14 @@
 import { FormEvent, useState, useEffect } from 'react';
 import Select from 'react-select';
 import { MultiValue } from 'react-select';
+import { OptionType, weatherVariables } from '@/utils/weatherVariables';
 import { weatherCodeMap } from '@/utils/weatherCodeMap';
 
-interface OptionType {
-  value: string;
-  label: string;
-}
-
-// type Row = {
-//   time: string;
-//   temperature: number;
-//   humidity: number;
-//   code: number;
-// };
-
 const WeatherQuery = () => {
-  const weatherVariables: OptionType[] = [
-    { value: 'temperature_2m', label: 'Temperature' },
-    { value: 'relative_humidity_2m', label: 'Rel. Humidity' },
-    { value: 'weather_code', label: 'Weather Code' },
-  ];
-
   const [headerContent, setHeaderContent] = useState<string[]>();
   const [resultContent, setResultContent] = useState<unknown[][]>([]);
+  const [variablesContent, setVariablesContent] = useState<string[]>();
   // State for input change
-  // const [inputValue, setInputValue] = useState<string>('temperature_2m');
   const [isMounted, setIsMounted] = useState(false); // Track component mount status
 
   const locStyle = 'text-lg border w-24 mx-4 p-1';
@@ -33,9 +16,9 @@ const WeatherQuery = () => {
   const headerStyle =
     'sticky top-0 border border-gray-300 px-4 py-2 bg-gray-200';
   const rowStyle = 'text-center border border-gray-300 px-4 py-1';
-  const [selectedVariables, setSelectedVariables] = useState<
-    MultiValue<OptionType>
-  >([]);
+  // const [selectedVariables, setSelectedVariables] = useState<
+  //   MultiValue<OptionType>
+  // >([]);
 
   // Ensure component is only rendered on the client after mounting
   useEffect(() => {
@@ -43,32 +26,12 @@ const WeatherQuery = () => {
   }, []);
 
   const handleVariablesChange = (selected: MultiValue<OptionType>) => {
-    console.log('handleVariablesChange...', selected);
-    setSelectedVariables(selected || []); // Update state with selected values
-    // const headerBody = selected.map(item => item.label);
-    // setHeaderContent(headerBody);
-    // console.log(headerBody);
+    // setSelectedVariables(selected || []);
+    const headerBody = selected.map(item => item.label);
+    // Update table header with selected values
+    setHeaderContent(['Time'].concat(headerBody));
+    setVariablesContent(selected.map(item => item.value));
   };
-
-  // Handle input change in the search field
-  // const handleInputChange = (
-  //   inputValue: string,
-  //   actionMeta: InputActionMeta
-  // ) => {
-  //   console.log('Input Changed:', inputValue, actionMeta);
-  //   setInputValue(inputValue);
-  // };
-
-  // Handle menu open
-  // const handleMenuOpen = () => {
-  //   console.log(weatherVariables);
-  //   console.log('Menu is opened');
-  // };
-
-  // Handle menu close
-  // const handleMenuClose = () => {
-  //   console.log('Menu is closed');
-  // };
 
   const replaceValuesWithLabels = (
     values: string[],
@@ -104,10 +67,10 @@ const WeatherQuery = () => {
     );
   };
 
-  const objectOfArraysToArray = <T,>(
+  const objectOfArraysToArray = <T extends string | number>(
     input: Record<string, T[]>
-    // ): (string | T)[][] => {
-  ): T[][] => {
+  ): (string | T)[][] => {
+    // ): T[][] => {
     const keys = Object.keys(input); // Get the keys from the object
     const arrays = Object.values(input); // Get the arrays from the object
 
@@ -115,8 +78,18 @@ const WeatherQuery = () => {
     return Array.from({ length }, (_, rowIndex) =>
       keys.map(key => {
         switch (key) {
+          case 'time':
+            return new Date(input[key][rowIndex]).toLocaleString('en-US', {
+              year: 'numeric',
+              month: 'numeric', // Full month name, e.g., "September"
+              day: 'numeric',
+              hour: 'numeric',
+              minute: undefined,
+              second: undefined, // Explicitly exclude seconds
+              hour12: true, // Set to false for 24-hour format
+            });
           case 'weather_code':
-            return weatherCodeMap[input[key][rowIndex]];
+            return weatherCodeMap[input[key][rowIndex] as number];
           default:
             return input[key][rowIndex];
         }
@@ -139,10 +112,11 @@ const WeatherQuery = () => {
 
     let prompt = process.env.NEXT_PUBLIC_WEATHER_BASE_URL;
     prompt = `${prompt}?latitude=${latitude}&longitude=${longitude}&start_date=${startdate}&end_date=${enddate}`;
+    prompt += '&hourly=' + variablesContent?.join(',');
     prompt +=
-      '&hourly=temperature_2m,relative_humidity_2m,weather_code&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FLos_Angeles';
+      '&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=America%2FLos_Angeles';
     console.log(prompt);
-    console.log(selectedVariables);
+    // console.log(selectedVariables);
 
     try {
       const response = await fetch(prompt);
@@ -199,7 +173,7 @@ const WeatherQuery = () => {
               options={weatherVariables}
               onChange={handleVariablesChange}
               isMulti
-              placeholder="Select variables..."
+              placeholder="Select variables for display..."
               // inputValue={inputValue}
               // value={selectedVariables}
               // onInputChange={handleInputChange}
@@ -229,7 +203,7 @@ const WeatherQuery = () => {
         <div className="w-full h-96 overflow-y-auto border border-gray-300 mt-2">
           <table className="table-fixed w-full border-collapse border border-gray-300">
             <thead>
-              {/* <tr>
+              <tr>
                 {headerContent ? (
                   headerContent.map((item, index) => (
                     <th key={index} className={headerStyle}>
@@ -237,17 +211,8 @@ const WeatherQuery = () => {
                     </th>
                   ))
                 ) : (
-                  <tr>
-                    <th>Empty</th>
-                  </tr>
+                  <th>Empty</th>
                 )}
-              </tr> */}
-
-              <tr>
-                <th className={headerStyle}>Time</th>
-                <th className={headerStyle}>Temperature</th>
-                <th className={headerStyle}>Humidity</th>
-                <th className={headerStyle}>Code</th>
               </tr>
             </thead>
             <tbody>
@@ -263,9 +228,7 @@ const WeatherQuery = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="text-center">
-                    No data available
-                  </td>
+                  <td className="text-center">No data available</td>
                 </tr>
               )}
             </tbody>
