@@ -43,29 +43,29 @@ const WeatherQuery = () => {
     });
   };
 
-  const objectOfArraysToObjects = <T,>(
-    input: Record<string, T[]>
-  ): Record<string, T>[] => {
-    const keys = Object.keys(input); // Get the keys from the object
-    const arrays = Object.values(input); // Get the arrays from the object
+  // const objectOfArraysToObjects = <T,>(
+  //   input: Record<string, T[]>
+  // ): Record<string, T>[] => {
+  //   const keys = Object.keys(input); // Get the keys from the object
+  //   const arrays = Object.values(input); // Get the arrays from the object
 
-    const length = arrays[0].length;
+  //   const length = arrays[0].length;
 
-    // Create an array of objects where each object maps a key to the corresponding value from each array
-    return Array.from({ length }, (_, rowIndex) =>
-      keys.reduce(
-        // (acc, key, i) => {
-        //   acc[key] = arrays[i][rowIndex];
-        //   return acc;
-        // },
-        (acc, key) => {
-          acc[key] = input[key][rowIndex];
-          return acc;
-        },
-        {} as Record<string, T>
-      )
-    );
-  };
+  //   // Create an array of objects where each object maps a key to the corresponding value from each array
+  //   return Array.from({ length }, (_, rowIndex) =>
+  //     keys.reduce(
+  //       // (acc, key, i) => {
+  //       //   acc[key] = arrays[i][rowIndex];
+  //       //   return acc;
+  //       // },
+  //       (acc, key) => {
+  //         acc[key] = input[key][rowIndex];
+  //         return acc;
+  //       },
+  //       {} as Record<string, T>
+  //     )
+  //   );
+  // };
 
   const objectOfArraysToArray = <T extends string | number>(
     input: Record<string, T[]>

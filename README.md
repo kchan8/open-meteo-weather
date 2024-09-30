@@ -9,3 +9,4 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 Function: Get weather data from open-meteo.com
+Deployed to Firebase : https://show-weather-data.web.app/
