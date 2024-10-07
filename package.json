@@ -5,8 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "export": "next export",
-    "start": "next serve out",
+    "start": "next start",
     "lint": "next lint",
     "deploy": "npm run build && npm start"
   },
